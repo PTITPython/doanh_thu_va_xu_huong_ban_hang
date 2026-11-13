@@ -148,22 +148,5 @@ def cau7_huy_don(df, don_huy):
     print(f"→ Dòng sản phẩm mất nhiều nhất: {bang.index[0]} ({bang['DoanhThuMat'].iloc[0]:,.0f} USD)")
     return bang
 
-
-# Phần chạy thử: chỉ chạy khi gõ "python phan_tich.py", không chạy khi file khác import
-if __name__ == "__main__":
-    from du_lieu import RetailData
-
-    du_lieu = RetailData("sales_data_sample.csv")
-    du_lieu.doc()
-    du_lieu.lam_sach()
-    du_lieu.them_cot()
-    df = du_lieu.df
-
-    thong_ke_mo_ta(df)
-    cau1_doanh_thu_theo_thang(df)
-    cau2_quoc_gia(df)
-    cau3_san_pham_ban_chay(df)
-    cau4_thoi_diem_mua(df)
-    cau5_gia_tri_don_hang(df)
     cau6_khach_hang(df)
     cau7_huy_don(df, du_lieu.don_huy)
