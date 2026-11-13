@@ -147,6 +147,3 @@ def cau7_huy_don(df, don_huy):
     print(f"→ Doanh thu bị mất do hủy: {mat:,.0f} USD ({ty_le_mat:.1f}% so với tổng doanh thu)")
     print(f"→ Dòng sản phẩm mất nhiều nhất: {bang.index[0]} ({bang['DoanhThuMat'].iloc[0]:,.0f} USD)")
     return bang
-
-    cau6_khach_hang(df)
-    cau7_huy_don(df, du_lieu.don_huy)
