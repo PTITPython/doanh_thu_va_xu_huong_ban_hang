@@ -26,7 +26,7 @@ def cau1_doanh_thu_theo_thang(df):
     theo_nam = df.groupby("YEAR_ID")["Revenue"].sum()
     print("\nDoanh thu theo năm (năm 2005 chỉ có đến tháng 5):")
     print(theo_nam.round(0))
-    tang_2004 = (theo_nam.loc[2004] / theo_nam.loc[2003] - 1) * 100
+    tang_2004 = (theo_nam.loc[2004] / theo_nam.loc[2003] - 1) * 100 
     print(f"→ Năm 2004 so với năm 2003: {tang_2004:+.1f}%")
 
     # Năm 2005 chưa đủ 12 tháng nên so với CÙNG KỲ (tháng 1-5) của năm 2004 mới công bằng
@@ -34,6 +34,7 @@ def cau1_doanh_thu_theo_thang(df):
     tang_2005 = (cung_ky.loc[2005] / cung_ky.loc[2004] - 1) * 100
     print(f"→ 5 tháng đầu 2005 so với 5 tháng đầu 2004: {tang_2005:+.1f}%")
     return bang
+
 
 
 def cau2_quoc_gia(df):
@@ -72,7 +73,7 @@ def cau3_san_pham_ban_chay(df):
     theo_dong["TangTruong_2004_%"] = ((theo_dong[2004] / theo_dong[2003] - 1) * 100).round(1)
     theo_dong = theo_dong.sort_values(2004, ascending=False)
     print("\nDoanh thu theo dòng sản phẩm qua các năm (2005 mới có 5 tháng):")
-    print(theo_dong)
+    print(theo_dong.to_string())
     tang_nhat = theo_dong["TangTruong_2004_%"].idxmax()
     giam_nhat = theo_dong["TangTruong_2004_%"].idxmin()
     print(f"→ Tăng mạnh nhất 2004 so với 2003: {tang_nhat} ({theo_dong.loc[tang_nhat, 'TangTruong_2004_%']:+.1f}%)")
@@ -107,9 +108,9 @@ def cau5_gia_tri_don_hang(df):
     print("\nCÂU 5: Giá trị mỗi đơn hàng")
     don_hang = df.groupby("ORDERNUMBER")["Revenue"].sum()  # tổng tiền của từng đơn
     print(don_hang.describe().round(1))
-    print(f"→ Trung bình {don_hang.mean():,.0f} USD/đơn, trung vị {don_hang.median():,.0f} USD/đơn")
-    if don_hang.mean() > don_hang.median():
-        print("→ Trung bình lớn hơn trung vị: một số ít đơn rất lớn kéo trung bình lên")
+    trung_binh = don_hang.mean()
+    trung_vi = don_hang.median()
+    print(f"→ Một đơn hàng thường có giá trị khoảng {min(trung_binh, trung_vi):,.0f} đến {max(trung_binh, trung_vi):,.0f} USD/đơn")
     return don_hang
 
 
@@ -137,7 +138,6 @@ def cau7_huy_don(df, don_huy):
     ty_le = so_don_huy / (so_don_huy + so_don_ban) * 100
     bang = don_huy.groupby("PRODUCTLINE").agg(
         SoDon=("ORDERNUMBER", "nunique"),   # số đơn hủy có chứa dòng sản phẩm này
-        SoDong=("ORDERNUMBER", "size"),     # số dòng hàng bị hủy
         DoanhThuMat=("SALES", "sum"),       # doanh thu bị mất
     ).sort_values("DoanhThuMat", ascending=False).round(0)
     print(bang)
