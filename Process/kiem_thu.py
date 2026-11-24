@@ -2,7 +2,7 @@
  
 import pandas as pd
  
-from du_lieu import RetailData
+from xu_li_du_lieu import RetailData
  
 # Một dòng "chuẩn", các dòng khác chỉ thay đổi vài giá trị để tạo lỗi cố ý
 DONG_MAU = dict(
