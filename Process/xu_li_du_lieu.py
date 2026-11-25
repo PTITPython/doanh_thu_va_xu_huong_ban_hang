@@ -169,7 +169,7 @@ class RetailData:
 
 
 if __name__ == "__main__":
-    du_lieu = RetailData("sales_data_sample.csv")
+    du_lieu = RetailData("Data/raw_data.csv")
     du_lieu.doc()
 
     print("\n--- LÀM SẠCH ---")
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
     print("\n--- TẠO CỘT MỚI ---")
     du_lieu.them_cot()
-    du_lieu.luu("du_lieu_da_lam_sach.csv")
+    du_lieu.luu("Data/clean_data.csv")
 
     print("\n--- LỌC - TÌM KIẾM - SẮP XẾP ---")
     duc = du_lieu.loc_theo_quoc_gia("Germany")
