@@ -14,9 +14,8 @@ def thong_ke_mo_ta(df):
     print("Số quốc gia:", df["COUNTRY"].nunique())
     return bang
 
-
+"""Câu 1: Doanh thu từng tháng ra sao? Năm sau tăng bao nhiêu % so với năm trước?"""
 def cau1_doanh_thu_theo_thang(df):
-    """Câu 1: Doanh thu từng tháng ra sao? Năm sau tăng bao nhiêu % so với năm trước?"""
     print("\nCÂU 1: Doanh thu theo tháng và tăng trưởng")
     bang = df.groupby("Month")["Revenue"].sum().round(0)
     print(bang)
@@ -36,8 +35,9 @@ def cau1_doanh_thu_theo_thang(df):
     return bang
 
 
+
+"""Câu 2: Quốc gia nào mang lại nhiều doanh thu nhất?"""
 def cau2_quoc_gia(df):
-    """Câu 2: Quốc gia nào mang lại nhiều doanh thu nhất?"""
     print("\nCÂU 2: Doanh thu theo quốc gia")
     bang = df.groupby("COUNTRY").agg(
         DoanhThu=("Revenue", "sum"),            # tổng doanh thu
@@ -53,8 +53,9 @@ def cau2_quoc_gia(df):
     return bang
 
 
-def cau3_san_pham_ban_chay(df):
-    """Câu 3: Sản phẩm nào bán chạy nhất? Dòng sản phẩm nào đang tăng, dòng nào giảm?"""
+
+ """Câu 3: Sản phẩm nào bán chạy nhất? Dòng sản phẩm nào đang tăng, dòng nào giảm?"""
+def cau3_san_pham_ban_chay(df): 
     print("\nCÂU 3: Top 10 sản phẩm theo doanh thu")
     bang = df.groupby("PRODUCTCODE").agg(
         DoanhThu=("Revenue", "sum"),
@@ -80,8 +81,9 @@ def cau3_san_pham_ban_chay(df):
     return bang
 
 
+
+"""Câu 4: Doanh thu cao nhất vào tháng nào, quý nào trong năm (mùa vụ)?"""
 def cau4_thoi_diem_mua(df):
-    """Câu 4: Doanh thu cao nhất vào tháng nào, quý nào trong năm (mùa vụ)?"""
     print("\nCÂU 4: Doanh thu theo năm (hàng) và tháng trong năm (cột)")
     bang = pd.pivot_table(df, values="Revenue", index="YEAR_ID", columns="MONTH_ID",
                           aggfunc="sum", fill_value=0).round(0)
@@ -102,8 +104,9 @@ def cau4_thoi_diem_mua(df):
     return bang
 
 
+
+"""Câu 5: Một đơn hàng thường có giá trị bao nhiêu?"""
 def cau5_gia_tri_don_hang(df):
-    """Câu 5: Một đơn hàng thường có giá trị bao nhiêu?"""
     print("\nCÂU 5: Giá trị mỗi đơn hàng")
     don_hang = df.groupby("ORDERNUMBER")["Revenue"].sum()  # tổng tiền của từng đơn
     print(don_hang.describe().round(1))
@@ -113,8 +116,9 @@ def cau5_gia_tri_don_hang(df):
     return don_hang
 
 
+
+"""Câu 6: Doanh thu phụ thuộc vào bao nhiêu khách lớn?"""
 def cau6_khach_hang(df):
-    """Câu 6: Doanh thu phụ thuộc vào bao nhiêu khách lớn?"""
     print("\nCÂU 6: Khách hàng đóng góp doanh thu")
     bang = df.groupby("CUSTOMERNAME").agg(
         SoDon=("ORDERNUMBER", "nunique"),
@@ -129,8 +133,10 @@ def cau6_khach_hang(df):
     return bang
 
 
+
+
+"""Câu 7: Hủy đơn làm mất bao nhiêu doanh thu? Dòng sản phẩm nào mất nhiều nhất?"""
 def cau7_huy_don(df, don_huy):
-    """Câu 7: Hủy đơn làm mất bao nhiêu doanh thu? Dòng sản phẩm nào mất nhiều nhất?"""
     print("\nCÂU 7: Hủy đơn")
     so_don_huy = don_huy["ORDERNUMBER"].nunique()
     so_don_ban = df["ORDERNUMBER"].nunique()
