@@ -86,7 +86,7 @@ def cau3_san_pham_ban_chay(df):
 def cau4_thoi_diem_mua(df):
     print("\nCÂU 4: Doanh thu theo năm (hàng) và tháng trong năm (cột)")
     bang = pd.pivot_table(df, values="Revenue", index="YEAR_ID", columns="MONTH_ID",
-                          aggfunc="sum", fill_value=0).round(0)
+                          aggfunc="sum").round(0)
     print(bang.to_string())
 
     # Chỉ dùng 2 năm đủ 12 tháng (2003, 2004) để so sánh công bằng
