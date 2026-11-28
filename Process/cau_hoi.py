@@ -54,7 +54,7 @@ def cau2_quoc_gia(df):
 
 
 
- """Câu 3: Sản phẩm nào bán chạy nhất? Dòng sản phẩm nào đang tăng, dòng nào giảm?"""
+"""Câu 3: Sản phẩm nào bán chạy nhất? Dòng sản phẩm nào đang tăng, dòng nào giảm?"""
 def cau3_san_pham_ban_chay(df): 
     print("\nCÂU 3: Top 10 sản phẩm theo doanh thu")
     bang = df.groupby("PRODUCTCODE").agg(
@@ -86,7 +86,7 @@ def cau3_san_pham_ban_chay(df):
 def cau4_thoi_diem_mua(df):
     print("\nCÂU 4: Doanh thu theo năm (hàng) và tháng trong năm (cột)")
     bang = pd.pivot_table(df, values="Revenue", index="YEAR_ID", columns="MONTH_ID",
-                          aggfunc="sum", fill_value=0).round(0)
+                          aggfunc="sum").round(0)  # không điền 0: tháng 6-12/2005 là chưa có dữ liệu
     print(bang.to_string())
 
     # Chỉ dùng 2 năm đủ 12 tháng (2003, 2004) để so sánh công bằng
@@ -110,9 +110,9 @@ def cau5_gia_tri_don_hang(df):
     print("\nCÂU 5: Giá trị mỗi đơn hàng")
     don_hang = df.groupby("ORDERNUMBER")["Revenue"].sum()  # tổng tiền của từng đơn
     print(don_hang.describe().round(1))
-    print(f"→ Trung bình {don_hang.mean():,.0f} USD/đơn, trung vị {don_hang.median():,.0f} USD/đơn")
-    if don_hang.mean() > don_hang.median():
-        print("→ Trung bình lớn hơn trung vị: một số ít đơn rất lớn kéo trung bình lên")
+    q1, q3 = don_hang.quantile([0.25, 0.75])  # 50% số đơn ở giữa nằm trong [q1, q3]
+    print(f"→ Kết luận: một đơn hàng thường trị giá {q1:,.0f}–{q3:,.0f} USD, "
+          f"trung vị {don_hang.median():,.0f} USD/đơn")
     return don_hang
 
 

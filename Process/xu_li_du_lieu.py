@@ -1,11 +1,14 @@
 """Mô-đun du_lieu: quản lý dữ liệu bán hàng (đọc, kiểm tra, làm sạch, tạo cột, lọc, tìm, lưu)."""
 
 import pandas as pd
+import os
 
 # Các cột bắt buộc phải có trong file đầu vào
 COT_BAT_BUOC = [
     "ORDERNUMBER", "ORDERLINENUMBER", "QUANTITYORDERED", "PRICEEACH", "SALES",
     "ORDERDATE", "STATUS", "PRODUCTLINE", "PRODUCTCODE", "CUSTOMERNAME", "COUNTRY",
+    "YEAR_ID", "MONTH_ID", "QTR_ID", "CITY", "STATE", "POSTALCODE", "TERRITORY",
+    "ADDRESSLINE1"
 ]
 
 # Chỉ tách đơn đã hủy ('Cancelled'); giữ lại 'Disputed', 'On Hold', 'In Process' vì chưa hủy hẳn
@@ -29,54 +32,79 @@ class RetailData:
         self.df = None
         self.don_huy = None
 
-    def _kiem_tra_da_doc(self):
+    def _kiem_tra_da_nap(self):
         """Kiểm tra xem dữ liệu đã được nạp hay chưa trước khi thao tác."""
         if self.df is None:
             raise ValueError("Chưa đọc dữ liệu! Hãy gọi doc() trước.")
 
+       
     def doc(self):
         """Đọc file CSV và kiểm tra các cột bắt buộc."""
         # Dùng cp850 để đọc đúng ký tự dấu/đặc biệt; tắt nhận diện "NA" mặc định để không mất vùng North America
         # Ép kiểu str cho các cột mã để giữ nguyên số 0 đầu hoặc định dạng mã
-        self.df = pd.read_csv(
-            self.duong_dan,
-            encoding="cp850",
-            keep_default_na=False,
-            na_values=[""],
-            dtype={"ORDERNUMBER": str, "PRODUCTCODE": str, "POSTALCODE": str, "PHONE": str},
-        )
+        try:
+            self.df = pd.read_csv(
+                self.duong_dan,
+                encoding="cp850",
+                keep_default_na=False,
+                na_values=[""],
+                dtype={"ORDERNUMBER": str, "PRODUCTCODE": str, "POSTALCODE": str, "PHONE": str},
+            )
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Không tìm thấy file '{self.duong_dan}'")
 
-        cac_cot_thieu = [cot for cot in COT_BAT_BUOC if cot not in self.df.columns]
+        except pd.errors.EmptyDataError:
+            raise ValueError(f"File '{self.duong_dan}' rỗng, không có dữ liệu.")
+
+        except pd.errors.ParserError:
+            raise ValueError(f"File '{self.duong_dan}' sai định dạng CSV (số cột giữa các dòng không khớp).")
+
+        if self.df.empty:
+            raise ValueError("File chỉ có dòng tiêu đề, không có bản ghi nào.")
+
+        cac_cot_thieu = []                      
+        for cot in COT_BAT_BUOC:                 
+            if cot not in self.df.columns:       
+                cac_cot_thieu.append(cot)        
+
         if cac_cot_thieu:
             raise ValueError(f"File dữ liệu thiếu các cột bắt buộc: {cac_cot_thieu}")
 
         print(f"Đã đọc {len(self.df)} dòng, {len(self.df.columns)} cột.")
 
+
     def kiem_tra(self):
         """In nhanh kiểu dữ liệu, số ô thiếu và số dòng trùng lặp."""
-        self._kiem_tra_da_doc()
+        self._kiem_tra_da_nap()
 
         print("Kiểu dữ liệu từng cột:")
         print(self.df.dtypes)
-        print("\nSố ô trống từng cột:")
-        print(self.df.isnull().sum())
+        o_trong = self.df.isnull().sum()
+        print("\nSố ô trống (chỉ các cột có ô trống):")
+        print(o_trong[o_trong > 0])
         print("\nSố dòng trùng hoàn toàn:", int(self.df.duplicated().sum()))
+
+
 
     def lam_sach(self):
         """Làm sạch dữ liệu theo từng bước và in số lượng dòng sau mỗi bước."""
-        self._kiem_tra_da_doc()
+        self._kiem_tra_da_nap()
 
         df = self.df.copy()
         print(f"Ban đầu: {len(df)} dòng")
 
-        # 1. Chuyển cột ngày sang datetime (để lỗi nếu sai định dạng nhằm phát hiện sớm)
-        df["ORDERDATE"] = pd.to_datetime(df["ORDERDATE"], format="%m/%d/%Y %H:%M")
+        # 1. Chuyển cột ngày sang datetime (để lỗi nếu sai định dạng in ra màn hình để biết)
+        try:
+            df["ORDERDATE"] = pd.to_datetime(df["ORDERDATE"], format="%m/%d/%Y %H:%M")
+        except ValueError as loi:
+            raise ValueError(f"Cột ORDERDATE có giá trị sai định dạng tháng/ngày/năm giờ:phút. Chi tiết: {loi}")
         print(f"B1 - Chuẩn hóa ORDERDATE: {len(df)} dòng")
 
         # 2. Xóa dòng trùng hoàn toàn; báo thêm số dòng trùng khóa (đơn hàng + dòng chi tiết) nếu có
+        truoc = len(df)
         df = df.drop_duplicates()
         so_trung_khoa = int(df.duplicated(subset=["ORDERNUMBER", "ORDERLINENUMBER"]).sum())
-        print(f"B2 - Xóa dòng trùng lặp: {len(df)} dòng (trùng khóa đơn + dòng: {so_trung_khoa})")
+        print(f"B2 - Xóa {truoc - len(df)} dòng trùng lặp")
 
         # 3. Chuẩn hóa chuỗi: gọn khoảng trắng, thống nhất tên thành phố và vùng của Singapore
         so_dia_chi_du_space = int(df["ADDRESSLINE1"].str.contains(r"\s{2,}", regex=True, na=False).sum())
@@ -91,19 +119,19 @@ class RetailData:
         df.loc[sai_vung_sg, "TERRITORY"] = "APAC"
         print(
             f"B3 - Chuẩn hóa chữ: sửa {so_dia_chi_du_space} địa chỉ dư khoảng trắng, "
-            f"{so_nyc} dòng 'NYC', {so_sg} dòng vùng 'Singapore' -> {len(df)} dòng"
+            f"{so_nyc} dòng 'NYC', {so_sg} dòng vùng 'Singapore'"
         )
 
         # 4. Tách đơn hủy sang bảng riêng để phân tích riêng, giữ phần còn lại trong bảng chính
         la_don_huy = df["STATUS"].isin(TRANG_THAI_HUY)
         self.don_huy = df[la_don_huy].copy()
         df = df[~la_don_huy]
-        print(f"B4 - Tách {len(self.don_huy)} đơn hủy: còn {len(df)} dòng")
+        print(f"B4 - Tách {len(self.don_huy)} đơn hủy -> còn {len(df)} dòng")
 
         # 5. Loại bỏ các dòng có số lượng, đơn giá hoặc doanh thu <= 0 (nếu phát sinh lỗi nhập liệu)
         hop_le = (df["QUANTITYORDERED"] > 0) & (df["PRICEEACH"] > 0) & (df["SALES"] > 0)
         df = df[hop_le]
-        print(f"B5 - Lọc giá trị dương (số lượng, đơn giá, doanh thu): còn {len(df)} dòng")
+        print(f"B5 - Lọc giá trị hợp lệ (số lượng, đơn giá, doanh thu): còn {len(df)} dòng")
 
         # 6. Xử lý giá trị thiếu theo ý nghĩa từng cột
         df = df.dropna(subset=["CUSTOMERNAME", "PRODUCTLINE"])
@@ -125,7 +153,7 @@ class RetailData:
 
     def them_cot(self):
         """Tạo các cột dẫn xuất phục vụ phân tích."""
-        self._kiem_tra_da_doc()
+        self._kiem_tra_da_nap()
 
         # Dùng trực tiếp SALES thay vì QUANTITYORDERED * PRICEEACH vì PRICEEACH bị chặn tối đa ở mức 100
         self.df["Revenue"] = self.df["SALES"]
@@ -139,13 +167,13 @@ class RetailData:
 
     def loc_theo_quoc_gia(self, quoc_gia):
         """Lọc các dòng theo tên quốc gia (không phân biệt hoa/thường và khoảng trắng thừa)."""
-        self._kiem_tra_da_doc()
+        self._kiem_tra_da_nap()
         ten_chuan = quoc_gia.strip().lower()
         return self.df[self.df["COUNTRY"].str.strip().str.lower() == ten_chuan]
 
     def tim_san_pham(self, tu_khoa):
         """Tìm sản phẩm theo từ khóa trên dòng sản phẩm (PRODUCTLINE) hoặc mã sản phẩm (PRODUCTCODE)."""
-        self._kiem_tra_da_doc()
+        self._kiem_tra_da_nap()
         tu_khoa = tu_khoa.strip()
         if not tu_khoa:
             raise ValueError("Từ khóa tìm kiếm không được để trống.")
@@ -156,16 +184,23 @@ class RetailData:
 
     def sap_xep(self, cot, tang_dan=False, so_dong=10):
         """Sắp xếp theo cột chỉ định và trả về `so_dong` dòng đầu."""
-        self._kiem_tra_da_doc()
+        self._kiem_tra_da_nap()
         if cot not in self.df.columns:
             raise ValueError(f"Không có cột '{cot}'. Các cột hiện có: {list(self.df.columns)}")
         return self.df.sort_values(cot, ascending=tang_dan).head(so_dong)
 
     def luu(self, duong_dan):
         """Lưu dữ liệu ra file CSV chuẩn UTF-8 (có BOM để mở đẹp trên Excel)."""
-        self._kiem_tra_da_doc()
-        self.df.to_csv(duong_dan, index=False, encoding="utf-8-sig")
+        self._kiem_tra_da_nap()
+        thu_muc = os.path.dirname(duong_dan)
+        if thu_muc:
+            os.makedirs(thu_muc, exist_ok = True)
+        try:
+            self.df.to_csv(duong_dan, index=False, encoding="utf-8-sig")
+        except PermissionError:
+            raise PermissionError(f"Không ghi được '{duong_dan}'. File đang mở trong Excel? Hãy đóng file rồi chạy lại.")
         print(f"Đã lưu dữ liệu vào: {duong_dan}")
+        
 
 
 if __name__ == "__main__":

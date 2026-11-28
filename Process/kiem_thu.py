@@ -1,8 +1,8 @@
-"""Kiểm thử cho lam_sach, them_cot, loc, tim, sap_xep của lớp RetailData.  Chạy:  python kiem_thu_lam_sach.py"""
+"""Kiểm thử cho lam_sach, them_cot, loc, tim, sap_xep của lớp RetailData.  Chạy từ thư mục gốc:  python -m Process.kiem_thu"""
  
 import pandas as pd
  
-from xu_li_du_lieu import RetailData
+from Process.xu_li_du_lieu import RetailData
  
 # Một dòng "chuẩn", các dòng khác chỉ thay đổi vài giá trị để tạo lỗi cố ý
 DONG_MAU = dict(
